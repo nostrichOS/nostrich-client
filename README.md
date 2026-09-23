@@ -4,7 +4,7 @@
 
 # Nostrich
 
-**Nostrich is a completely free Nostr client.**
+**Nostrich is a free and open-source Nostr client.**
 
 Your keys are your account. Your notes live on relays anyone can run.
 
