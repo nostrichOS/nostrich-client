@@ -162,7 +162,7 @@ export function RightRail(): React.ReactNode {
       <footer className="mr-3 space-y-2 pb-8 text-xs leading-relaxed text-text-faint">
         <p>© 2026 Nostrich. All rights reserved.</p>
         <p>
-          Nostrich is free and open-source Nostr client. Notes, profiles and media live on Nostr
+          Nostrich is a free and open-source Nostr client. Notes, profiles and media live on Nostr
           relays and are not hosted by Nostrich.{' '}
           {/* The one link in the footer, so it has to look like one. */}
           <Link
