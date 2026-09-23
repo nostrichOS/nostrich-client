@@ -164,13 +164,17 @@ export function RightRail(): React.ReactNode {
         <p>
           Nostrich is a free and open-source Nostr client. Notes, profiles and media live on Nostr
           relays and are not hosted by Nostrich.{' '}
-          {/* The one link in the footer, so it has to look like one. */}
-          <Link
-            href="/donate"
+          {/* An absolute URL, not a route: this points at the project's own donate page
+              wherever the client is running. The one link in the footer, so it has to look
+              like one. */}
+          <a
+            href="https://nostrich.org/donate"
+            target="_blank"
+            rel="noreferrer"
             className="font-semibold text-text underline underline-offset-2 hover:text-text-muted"
           >
             Donate here
-          </Link>{' '}
+          </a>{' '}
           to support its development.
         </p>
       </footer>
