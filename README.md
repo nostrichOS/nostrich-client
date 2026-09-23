@@ -4,9 +4,11 @@
 
 # Nostrich
 
-**A Nostr client.**
+**Nostrich is a completely free Nostr client.**
 
 Your keys are your account. Your notes live on relays anyone can run.
+
+[**nostrich.org**](https://nostrich.org)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-000000.svg?style=flat-square)](LICENSE)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=next.js)](https://nextjs.org)
