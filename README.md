@@ -4,7 +4,7 @@
 
 # Nostrich
 
-**A Nostr client for the web.**
+**A Nostr client.**
 
 Your keys are your account. Your notes live on relays anyone can run.
 
