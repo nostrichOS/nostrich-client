@@ -13,7 +13,7 @@ Your keys are your account. Your notes live on relays anyone can run.
 [![License: MIT](https://img.shields.io/badge/License-MIT-000000.svg?style=flat-square)](LICENSE)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Tests](https://img.shields.io/badge/tests-2%2C500%2B-2ea043?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/tests-2%2C471-2ea043?style=flat-square)](#testing)
 
 </div>
 
@@ -227,6 +227,7 @@ nothing. See [`.env.example`](.env.example).
 | `TRENDING_INDEX_URL` | Candidates for the trending worker. No default |
 | `PFP_CACHE_DIR` | Where resized avatars are written |
 | `UNFURL_PROXY_SECRET` | Signs image-proxy URLs |
+| `UNFURL_READER_URL` | Optional reader service for sites that refuse this server. No default |
 
 Relay defaults live in `packages/nostr/src/relays.ts`. A reader's own
 kind-10002 list overrides them everywhere, so the defaults are a starting
@@ -249,7 +250,7 @@ pnpm typecheck     # strict, with noUncheckedIndexedAccess
 pnpm test          # every package
 ```
 
-Over 2,500 tests. The protocol core is tested against real event fixtures
+2,471 tests across 195 files. The protocol core is tested against real event fixtures
 rather than hand-made ones, because a fixture you wrote yourself only proves
 the parser agrees with itself.
 
