@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Pinned to node so the program does not silently pick up whatever @types happen to
+    // be resolvable in the workspace — a typecheck that passes for a reason nobody can
+    // point at is a typecheck that breaks on the build box.
+    //
+    // `lib` is deliberately NOT narrowed to drop DOM, tempting as that is for a
+    // server-only package: this package type-checks @nostrich/nostr from source (raw
+    // TypeScript, no build step, so skipLibCheck does not apply to it) and its NIP-07
+    // signer legitimately refers to `window`.
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "vitest.config.ts"],
+  "exclude": ["node_modules"]
+}

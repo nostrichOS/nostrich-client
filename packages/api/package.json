@@ -1,0 +1,35 @@
+{
+  "name": "@nostrich/api",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "lint": "echo \"no lint\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "trending": "tsx src/trending/worker.ts"
+  },
+  "dependencies": {
+    "@nostrich/nostr": "workspace:*",
+    "@nostrich/types": "workspace:*",
+    "@prisma/client": "6.2.1",
+    "google-auth-library": "9.15.0",
+    "jose": "5.9.6",
+    "nostr-tools": "2.24.1",
+    "ws": "8.21.3",
+    "zod": "3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.7",
+    "prisma": "6.2.1",
+    "tsx": "4.19.2",
+    "typescript": "5.7.3",
+    "vitest": "2.1.8"
+  }
+}

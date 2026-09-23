@@ -1,0 +1,1538 @@
+@import "tailwindcss";
+
+/* The brand family, injected by next/font in layout.tsx. Exposed to Tailwind as
+   `font-brand` so the wordmark's typeface can be applied to headings that sit next to it. */
+@theme {
+  --font-brand: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+}
+/* The design system. Brand scale, brand-tinted neutrals, the semantic ramps, the zap
+   gold and the surface roles all live there and are shared with the other platforms via
+   tokens.ts, this app defines no colours of its own. It also carries the base reset, the
+   focus-visible ring and the reduced-motion rule, so none of that is repeated here. */
+@import "@nostrich/ui/src/theme.css";
+
+/* Explicit, so detection never depends on where the build was invoked. */
+@source "../app";
+@source "../components";
+@source "../lib";
+
+@layer components {
+  /*
+   * A <select> with its own chevron.
+   *
+   * The native arrow is drawn by the browser hard against the field's inline end, padding does
+   * not move it, so on a bordered field it sits on the border with no air around it. Turning
+   * the appearance off and drawing the chevron as a background image puts it where the design
+   * wants it: 0.75rem in, vertically centred, with the padding reserved so a long option label
+   * cannot run underneath it.
+   *
+   * Neutral grey rather than `currentColor`, because a background image cannot read the text
+   * colour; #737373 is the one value that holds up on every surface it lands on.
+   */
+  .select-field {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.05rem;
+    /*
+     * NO padding here, deliberately, see `.note-body` above for the same trap. This class and
+     * Tailwind's `px-3` are both single-class selectors, and utilities are emitted later in the
+     * sheet, so the utility wins every time and the chevron ends up sitting under the last
+     * character of a long option. The room is reserved at the call site with `pr-9!` instead.
+     */
+  }
+
+  /*
+   * A floating panel's shadow. One layer, and this exact one.
+   *
+   * `rgba(99, 99, 99, 0.2) 0 2px 8px`, plus a second layer at 0 y-offset so the shadow reads on
+   * all four sides. The first alone is pushed 2px down, which leaves the top edge with almost
+   * nothing; the second is unoffset and half the strength, so top, left and right get the same
+   * treatment as the bottom without turning into a halo. Grey rather than black, no spread on
+   * either. Two earlier versions here tried to be cleverer: one had negative spread and drew a
+   * shelf with a hard edge, the next removed the spread but reached 80px in every direction and
+   * washed grey over the nav row beneath the panel. A small single layer has neither failure
+   * available to it.
+   */
+  .panel-shadow {
+    box-shadow:
+      rgba(99, 99, 99, 0.2) 0px 2px 8px 0px,
+      rgba(99, 99, 99, 0.14) 0px 0px 6px 0px;
+  }
+
+  /*
+   * Note bodies are user-authored: hard line breaks are meaningful, and a single
+   * 400-character URL with nowhere to break would otherwise widen the whole page and
+   * force horizontal scroll on every row. `anywhere` rather than `break-word` because
+   * break-word will not split a long token that started on a fresh line.
+   */
+  .note-body {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    /*
+     * NO font-size here, deliberately.
+     *
+     * It used to set one, and it never took effect: `.note-body` and Tailwind's `.text-base`
+     * are both single-class selectors, and utilities are emitted far later in the sheet, so
+     * the utility won every time. The reader's text-size setting did nothing at all.
+     *
+     * The scale now rides on the element as a utility instead, reading the same
+     * `--content-scale` variable this file defines below. Same trap as the icon-font sizes:
+     * equal specificity, later wins.
+     */
+  }
+
+  /*
+   * The zap summary banner: the totals at the top of /zaps and the profile's Zaps tab.
+   *
+   * Proportions are the design's own, in `cqw` against the card's inline size, so the whole
+   * thing scales from a 600px column down to a 290px half-panel without a single breakpoint.
+   * That is why it lives here rather than as utilities: `10.35cqw` for the figure and `40.2%`
+   * for the artwork are a drawing's measurements, and spelling them as arbitrary Tailwind
+   * values would scatter one design across a dozen class strings.
+   *
+   * Colour is FOUR variables and nothing else. Received and Sent set them; the dark theme
+   * redefines the same four. Anything that hard-codes a colour below this line is a bug.
+   */
+  .zap-banner {
+    container-type: inline-size;
+    position: relative;
+    width: 100%;
+    /*
+     * HEIGHT COMES FROM THE CONTENT, not from `aspect-ratio: 1568/610`.
+     *
+     * The ratio was there first and it cropped the pill on a phone: every type size in here has
+     * a `clamp()` floor, so below about 400px the words stop shrinking with the box while a
+     * fixed ratio keeps the box shrinking, and `overflow: hidden` ate the difference. The
+     * paddings and line heights inside add up to the design's own ratio at any width wide
+     * enough for the drawing, and the card simply grows taller when the floors take over.
+     */
+    overflow: hidden;
+    border: 2px solid var(--zb-border);
+    /*
+     * NO `cqw` ON THIS ELEMENT. Anywhere below this line inside `.zap-banner-*` it is the
+     * card's width; here it is the VIEWPORT's, because an element cannot query itself and the
+     * unit falls back to the nearest ancestor container, of which there is none. The design's
+     * `1.75cqw` radius therefore drew 24px on a 1400px window instead of 10px, and a
+     * `3.8cqw` shadow blurred 53px. Fixed units on the container, container units within it.
+     */
+    border-radius: 0.5rem;
+    background:
+      radial-gradient(circle at 18% 18%, var(--zb-soft) 0%, transparent 46%),
+      linear-gradient(112deg, var(--zb-bg) 0%, var(--zb-bg) 48%, var(--zb-bg-deep) 100%);
+    box-shadow: 0 6px 18px var(--zb-shadow);
+  }
+
+  .zap-banner-in {
+    --zb-accent: #087a43;
+    --zb-border: #b9dfc9;
+    --zb-bg: #f8fdfa;
+    --zb-bg-deep: #f4fbf7;
+    --zb-soft: #eaf7f0;
+    --zb-art: #d0f3d7;
+    --zb-pill: rgba(255, 255, 255, 0.83);
+    --zb-pill-border: rgba(8, 122, 67, 0.09);
+    --zb-pill-text: #303235;
+    --zb-shadow: rgba(25, 40, 31, 0.055);
+  }
+
+  .zap-banner-out {
+    --zb-accent: #b33d68;
+    --zb-border: #efbfd0;
+    --zb-bg: #fff8fa;
+    --zb-bg-deep: #fff3f7;
+    --zb-soft: #fdeff4;
+    --zb-art: #f3cddb;
+    --zb-pill: rgba(255, 255, 255, 0.83);
+    --zb-pill-border: rgba(179, 61, 104, 0.09);
+    --zb-pill-text: #303235;
+    --zb-shadow: rgba(40, 25, 31, 0.055);
+  }
+
+  /*
+   * The wallet balance, in the same card.
+   *
+   * A connected wallet used to be a grey box with a number in it, sitting one tab away from two
+   * banners that say the same kind of thing in colour. Orange because that is the zap colour and
+   * the balance is a zap balance, the same pastel weight as the other two, not a warning.
+   */
+  .zap-banner-wallet {
+    --zb-accent: #a85f04;
+    --zb-border: #f0d7b2;
+    --zb-bg: #fffaf3;
+    --zb-bg-deep: #fff6ec;
+    --zb-soft: #fdf1e2;
+    --zb-art: #f7dcb4;
+    --zb-pill: rgba(255, 255, 255, 0.83);
+    --zb-pill-border: rgba(168, 95, 4, 0.09);
+    --zb-pill-text: #303235;
+    --zb-shadow: rgba(40, 33, 25, 0.055);
+  }
+
+  /*
+   * The bolt, painted rather than pictured.
+   *
+   * The design shipped two 186KB PNGs that differ only in hue, identical alpha, one flat fill
+   * each. One mask at 58KB draws both.
+   */
+  .zap-banner-art {
+    position: absolute;
+    z-index: 1;
+    top: 2px;
+    right: 2px;
+    bottom: 2px;
+    width: 40.2%;
+    background-color: var(--zb-art);
+    -webkit-mask-image: var(--zb-art-src);
+    mask-image: var(--zb-art-src);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: right center;
+    mask-position: right center;
+    pointer-events: none;
+  }
+
+  .zap-banner-body {
+    position: relative;
+    z-index: 2;
+    /* The card's bottom breathing room lives here rather than on the card, so it is measured
+       against the card's width like everything else in the drawing. */
+    padding: 3.95cqw 0 3.7cqw 5.5cqw;
+    width: 80%;
+  }
+
+  .zap-banner-heading {
+    display: flex;
+    align-items: center;
+    gap: 3.15cqw;
+    margin-bottom: 2.55cqw;
+  }
+
+  .zap-banner-badge {
+    width: max(1.75rem, 7.05cqw);
+    height: max(1.75rem, 7.05cqw);
+    border-radius: 9999px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    color: var(--zb-accent);
+    background: linear-gradient(145deg, var(--zb-pill), var(--zb-soft));
+    border: 1px solid var(--zb-border);
+  }
+
+  .zap-banner-title {
+    color: var(--zb-accent);
+    font-size: clamp(0.6rem, 2.15cqw, 1.05rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.015em;
+  }
+
+  .zap-banner-figure {
+    display: flex;
+    align-items: baseline;
+    gap: 1.65cqw;
+    white-space: nowrap;
+    margin-bottom: 4cqw;
+  }
+
+  /* "at least", set small beside the figure it qualifies. Half the size and lighter, so the
+     number still reads as the number and the qualifier reads as part of the sentence rather
+     than as a second figure. */
+  .zap-banner-atleast {
+    font-size: 0.42em;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    opacity: 0.75;
+  }
+
+  .zap-banner-amount {
+    color: var(--zb-accent);
+    font-size: clamp(1.5rem, 10.35cqw, 4rem);
+    line-height: 0.84;
+    font-weight: 800;
+    letter-spacing: -0.065em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .zap-banner-unit {
+    font-size: clamp(0.7rem, 3.05cqw, 1.25rem);
+    line-height: 1;
+    font-weight: 500;
+    color: var(--color-text-muted);
+  }
+
+  .zap-banner-pill {
+    width: fit-content;
+    max-width: 74cqw;
+    display: flex;
+    align-items: center;
+    /*
+     * Floors on the padding and the gap, because the pill's contents do NOT scale with the
+     * card. The words stop shrinking at their `clamp()` floor and the faces are a fixed 32px,
+     * so on the profile tab's 275px panel a purely `cqw` padding came to 4px and the stack sat
+     * against the pill's edge. The card may halve; the room around the words may not.
+     */
+    gap: max(0.6rem, 2.4cqw);
+    padding: max(0.45rem, 1.5cqw) max(0.85rem, 1.8cqw) max(0.45rem, 1.5cqw) max(0.8rem, 1.6cqw);
+    border-radius: 2cqw;
+    background: var(--zb-pill);
+    border: 1px solid var(--zb-pill-border);
+    box-shadow: 0 0.5cqw 1.8cqw var(--zb-shadow);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .zap-banner-pill-icon {
+    width: max(1.25rem, 5.4cqw);
+    height: max(1.25rem, 5.4cqw);
+    border-radius: 9999px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    color: var(--zb-accent);
+    background: color-mix(in srgb, var(--zb-accent) 10%, transparent);
+  }
+
+  .zap-banner-count {
+    font-size: clamp(0.7rem, 2.85cqw, 1.15rem);
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--zb-pill-text);
+    flex: 0 0 auto;
+  }
+
+  .zap-banner-count strong {
+    color: var(--zb-accent);
+    font-weight: 800;
+  }
+
+  .zap-banner-faces {
+    display: flex;
+    align-items: center;
+    gap: 2.4cqw;
+    flex: 0 0 auto;
+  }
+
+  .zap-banner-avatars {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+  }
+
+  /* The ring is the card's own surface, so the stack reads as one object rather than as three
+     discs that happen to touch. */
+  .zap-banner-avatars > * {
+    border: 2px solid var(--zb-bg);
+    border-radius: 9999px;
+    box-shadow: 0 0 0 1px var(--zb-shadow);
+  }
+
+  /*
+   * The overlap is a share of the AVATAR, not of the card.
+   *
+   * It was `-1.5cqw`, and the avatars are a fixed 32px: on the 558px banner that overlapped
+   * them by 8px, and on the profile tab's 275px panel by 4px, so the same three faces drifted
+   * apart exactly where there was least room for them. A fixed pull keeps the stack identical
+   * at every width. Not on the first, which would slide it under the words.
+   */
+  .zap-banner-avatars > * + * {
+    margin-left: -0.8rem;
+  }
+
+  /*
+   * The unselected half of the profile tab's pair.
+   *
+   * A second edge outside the card's own, tried, and it read as a stray green line rather than
+   * as a selection. The two halves are now identical apart from their lift: the one driving the
+   * list keeps its shadow, the other sits flat on the page. Nothing is added, nothing dims, and
+   * `aria-pressed` still says which is which to anything that cannot see the difference.
+   */
+  .zap-banner-idle {
+    box-shadow: none;
+  }
+
+  /**
+   * TAILWIND'S `appearance-none`, SAID IN THE DIALECT WEBKIT ACTUALLY READS.
+   *
+   * Tailwind v4 emits `.appearance-none{appearance:none}` and no prefix. That is correct and
+   * modern, and WebKit does not fully act on it: for form controls it still consults
+   * `-webkit-appearance`, so a `<select>` or a range input keeps its NATIVE chrome on an iPhone
+   * while every one of our own styles applies on top. The result is a native control wearing
+   * our paint, a second chevron, a grey pill, or the white knob described below.
+   *
+   * It only ever shows up on a phone, and Chrome on an iPhone is WebKit too (Apple requires
+   * it), so "it happens in both browsers" is one engine and a desktop can never see it.
+   *
+   * A companion rule rather than three patched call sites: every `appearance-none` in this app
+   * is on a native control we are re-drawing ourselves, and the next one should not have to
+   * rediscover this.
+   */
+  .appearance-none {
+    -webkit-appearance: none;
+  }
+
+  /**
+   * THE VIDEO'S OWN VOLUME CONTROL, REMOVED. There is exactly one mute button and we draw it.
+   *
+   * A clip had two: ours in the top-left corner, and the browser's inside the native control
+   * bar whenever that appeared, on hover on a desktop, on a tap on a phone. Two controls for
+   * one setting, looking nothing like each other, one of them appearing and disappearing.
+   *
+   * `controls` is all-or-nothing as an attribute: `controlsList` can drop download, fullscreen
+   * and remote playback, and has nothing to say about volume. These pseudo-elements are the
+   * only way to reach inside the shadow DOM, and they are WebKit/Blink only, which is Safari,
+   * Chrome, Edge, and every browser on iOS. Firefox keeps its own volume control; it is a
+   * second way to do the same thing rather than a broken one, so it is left alone rather than
+   * chased with a rule that does not exist.
+   */
+  /*
+   * ── AND ONLY WHERE WE ACTUALLY REPLACE IT ───────────────────────────────────────
+   *
+   * `hover: hover`, matching the inverse of the rule below, and the two must stay a pair.
+   *
+   * Unscoped, this removed the browser's mute button on EVERY WebKit/Blink browser, including
+   * touch ones, where the rule below removes OURS. Android Chrome and DuckDuckGo therefore had
+   * neither: the clip starts muted by design, the native volume control was gone, our corner
+   * badge was gone, and there was no way left to turn sound on. Reported as "I can see video
+   * controls, I don't see the audio control, so there's no sound playing".
+   *
+   * iPhone escaped it for the reason spelled out below, iOS draws overlay chrome these
+   * selectors cannot reach, which is exactly why the report read "it's quite odd": the same
+   * video played with sound on iOS and silently everywhere else on a phone.
+   *
+   * The pairing is the invariant: hide the browser's control only on the pointer where ours is
+   * shown. Neither rule may be edited without the other.
+   */
+  @media (hover: hover) {
+    .timeline-video::-webkit-media-controls-mute-button,
+    .timeline-video::-webkit-media-controls-volume-slider,
+    .timeline-video::-webkit-media-controls-volume-control-container {
+      display: none !important;
+    }
+  }
+
+  /**
+   * ON A TOUCH SCREEN, THE ONE MUTE BUTTON IS THE BROWSER'S, NOT OURS.
+   *
+   * The rule above is WebKit's desktop shadow DOM. iOS does not use it: Safari there draws its
+   * own overlay chrome, mute in the top-right corner, expand-to-fullscreen in the top-left , 
+   * and no CSS selector and no `controlsList` value reaches any of it. Confirmed on a phone with
+   * both shipped: two mute buttons, and the native fullscreen button sitting UNDERNEATH ours.
+   *
+   * So on the platform where we cannot remove theirs, we remove ours. That leaves exactly one
+   * mute button, and it uncovers the fullscreen button our corner badge was hiding.
+   *
+   * `hover: none` rather than a width breakpoint, because this is a question about the pointer
+   * and not about the window. A narrow desktop window still has a mouse, still gets our badge,
+   * and still gets the rule above that removes the browser's. A laptop with a touchscreen
+   * reports its primary pointer as a mouse and is treated as the desktop it is.
+   */
+  @media (hover: none) {
+    .timeline-video-mute {
+      /*
+       * `!important` because of LAYER ORDER, not specificity.
+       *
+       * This block is in `@layer components`; the button also carries Tailwind's `flex`, which
+       * v4 emits in `@layer utilities`, a later layer, so `display:flex` wins no matter how
+       * specific the selector here is. Measured in the deployed sheet: this rule at byte 13939,
+       * `.flex{display:flex}` at 19710. An important declaration is the one thing that outranks
+       * a later layer. Exactly the collision `line-clamp` had with `block`.
+       */
+      display: none !important;
+    }
+  }
+
+  /*
+   * The audio scrubber's own chrome, removed.
+   *
+   * The input stays, it is what makes the scrubber keyboard- and screen-reader-operable, but
+   * every pixel the reader sees is painted by the divs behind it. A native track drawn on top
+   * of those would be a second, differently-coloured line through the same control.
+   *
+   * ── AND THE PREFIX IS NOT REDUNDANT ─────────────────────────────────────────────
+   *
+   * Reported as a white square beside the scrubber handle, on both Safari and Chrome on a
+   * phone. Chrome on an iPhone is WebKit, Apple requires it, so "both browsers" is one
+   * engine, which is also why this never appeared on a desktop or in headless Blink.
+   *
+   * WebKit honours `-webkit-appearance` on `::-webkit-slider-thumb` and ignores the unprefixed
+   * `appearance`. Tailwind v4 emits `appearance-none` without the prefix, and the rule here was
+   * written the same way, so on iOS the thumb kept its NATIVE look, a white knob, while the
+   * `width`/`height` beside it still applied and squeezed it into a 1.25rem box. A white
+   * square, exactly 20px, sitting at the handle's position.
+   *
+   * `border` and `box-shadow` go with it: the native knob carries both, and clearing only the
+   * background would leave its outline behind.
+   */
+  .audio-scrub::-webkit-slider-runnable-track {
+    -webkit-appearance: none;
+    height: 0.75rem;
+    background: transparent;
+  }
+  .audio-scrub::-webkit-slider-thumb {
+    /* PREFIXED ONLY, and deliberately. With `appearance: none` beside it the minifier judged
+       the prefixed one redundant and dropped it, which removed the single declaration that
+       does anything here, since this pseudo-element only exists in WebKit and only WebKit
+       reads it. Verified in the deployed stylesheet, not in the source. */
+    -webkit-appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .audio-scrub::-moz-range-track {
+    height: 0.75rem;
+    background: transparent;
+  }
+  .audio-scrub::-moz-range-thumb {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 0;
+    background: transparent;
+  }
+  /* Focus still has to be visible: the thumb it would ring is invisible, so the ring goes on
+     the control itself. */
+  .audio-scrub:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+    border-radius: 9999px;
+  }
+
+  /* Narrow cards, the profile tab's half-width pair, and phones, drop the artwork's share of
+     the width and the pieces of the pill that were only ever decoration. */
+  @container (max-width: 420px) {
+    .zap-banner-body {
+      width: 88%;
+      padding: 4.5cqw 0 4.5cqw 5.5cqw;
+    }
+    .zap-banner-art {
+      width: 46%;
+      opacity: 0.75;
+    }
+    .zap-banner-pill {
+      gap: 1.8cqw;
+      max-width: 100%;
+    }
+    .zap-banner-pill-icon {
+      display: none;
+    }
+  }
+}
+
+/* The reader's text-size setting, applied to note bodies.
+   The timeline does not render this app's NoteContent: it renders @nostrich/app's, through
+   react-native-web, which compiles an RN StyleSheet to classes at RUNTIME and injects them
+   after our stylesheet. A plain class rule of ours therefore loses on source order, and a
+   StyleSheet cannot read a CSS variable in the first place.
+   So the shared component tags its body text with `dataSet={{noteBody}}`, which is a no-op on
+   native and a data-attribute on web, and this rule sizes it. `!important` because the
+   injected rule has the same specificity and lands later, the same reason the icon-font
+   sizes carry `!`. */
+[data-note-body] {
+  /*
+   * 16/21, X's PROPORTIONS at a size that matches their apparent one.
+   *
+   * Measured from x.com's compiled stylesheet: `.text-body` is `font-size:15px;
+   * line-height:20px`, carried by the tweet body on both a timeline row and a focused status
+   * page, the same class string on two independently served pages, so there is no focal size
+   * bump to copy either.
+   *
+   * The ratio is copied exactly: 20/15 is 1.333, and 16 x 1.333 is 21.3, so 21 is the leading
+   * that keeps their rhythm. The SIZE is one point above theirs for the same reason the header
+   * row is, X renders in Chirp, whose x-height is 0.526em against SF Pro's 0.5078, about 3.6%
+   * taller at the same pixel size. Chirp is licensed exclusively to X, so matching their number
+   * renders visibly smaller than their timeline does; matching their appearance takes 16.
+   *
+   * The value in `NoteContent`'s StyleSheet moves with it, that one is what ships to iOS and
+   * Android, this one is what wins in a browser.
+   *
+   * `--content-scale` multiplies both, so the reader's text-size setting still steps from here:
+   * Small 0.9 is 14.4/18.9 and Largest 1.25 is 20/26.25.
+   */
+  font-size: calc(16px * var(--content-scale, 1)) !important;
+  line-height: calc(21px * var(--content-scale, 1)) !important;
+  /*
+   * The FAMILY, forced onto note text.
+   *
+   * react-native-web hands every `<Text>` its own `font: 14px System` shorthand, so a note body
+   * was rendering in RNW's built-in stack rather than the app's `--font-sans`. On macOS both
+   * collapse to SF and the difference is invisible; on Windows and Linux they are two different
+   * faces in the same column. `!important` for the same reason the two rules above carry it , 
+   * RNW's atomic class is injected after our sheet and otherwise wins on source order.
+   *
+   * Web only, deliberately. The native side needs a single family NAME, not a CSS fallback
+   * list, so it has to be set through `Platform.select` in the StyleSheet when mobile starts , 
+   * putting this list in there would be invalid on iOS and Android.
+   */
+  font-family: var(--font-sans) !important;
+  /*
+   * SUBPIXEL antialiasing, which is what X gets.
+   *
+   * X declares no font-smoothing anywhere, grepped across its whole 299KB stylesheet and its
+   * 1MB legacy bundle, zero hits. This app sets `-webkit-font-smoothing: antialiased` globally
+   * in theme.css, and on macOS that switches from subpixel to grayscale AA, which renders text
+   * visibly THINNER. It is the largest single reason notes can match X's sizes to the pixel and
+   * still look wrong, and it shows up long before anyone notices a 1px leading difference.
+   *
+   * Scoped to note text rather than reverted app-wide: the chrome and the lavender palette were
+   * tuned with smoothing on, and restyling every surface is a bigger decision than this one.
+   * Deleting the two lines in theme.css:447 would match X everywhere.
+   */
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+}
+
+/* Text-size steps, driven by `data-font` on <html>, see lib/font-size.ts.
+   Deliberately gentle: 0.9 is still comfortably readable and 1.25 is a real difference
+   without reflowing a note card into a column of two-word lines. */
+:root[data-font='sm'] {
+  --content-scale: 0.9;
+}
+:root[data-font='lg'] {
+  --content-scale: 1.12;
+}
+:root[data-font='xl'] {
+  --content-scale: 1.25;
+}
+
+/* Scroll without a visible bar.
+   Used on the right column, which is full-height but rarely overflows, the bar shows up as
+   a grey stripe against the cards and reads as a rendering artefact. Scrolling itself is
+   untouched: wheel, trackpad, touch and keyboard all still work. */
+.no-scrollbar {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* legacy Edge */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;                  /* WebKit */
+}
+
+/* Mobile chrome auto-hide.
+   `data-chrome="hidden"` lands on <html> when the reader scrolls down and is removed when
+   they scroll back up, see lib/chrome.ts, which explains why this is an attribute rather
+   than React state. Everything below `sm` that frames the timeline responds to it, so a
+   reader moving through the feed gets the whole screen.
+
+   Only the transform moves; nothing here changes layout, so hiding the bars never reflows
+   the timeline underneath them. */
+:root {
+  /* Vertical room the sticky feed tabs must leave for the mobile header. */
+  --chrome-h: 4rem;
+  /*
+   * Height of the fixed bottom nav, EXCLUDING the safe-area inset it adds beneath itself.
+   *
+   * Named because two places need it and they were out of step: the bar measures 69px, and the
+   * chat pane reserved a hardcoded 56px, so the message composer sat 13px UNDERNEATH the nav
+   * rather than above it, with the emoji, GIF and send controls half-covered.
+   *
+   * Anything reserving room for the bar adds `--bottom-nav-inset` itself, the way the bar does,
+   * so this stays one number rather than one number per device.
+   */
+  --bottom-nav-h: 69px;
+  /**
+   * EXTRA ROOM UNDER THE BOTTOM BAR, the home indicator's strip.
+   *
+   * `env(safe-area-inset-bottom)`, which reports something only because the viewport asks for
+   * `viewport-fit=cover` (see app/layout). Installed to the home screen there is no URL bar, so
+   * the bar is the last thing before the edge of the display: without this its labels sit under
+   * the home indicator and its corners are clipped by the phone.
+   *
+   * Named because five places need it, the bar, the chat composer above it, the zap toast, the
+   * compose button and the hide-on-scroll transform, and they were each spelling out the same
+   * `env()` call. One of them getting out of step is a control half-covered by another.
+   */
+  /*
+   * ZERO IN A BROWSER TAB. The inset is claimed only when the app is INSTALLED.
+   *
+   * It used to be the bare `env()` on every surface, on the stated assumption that the value
+   * "is zero in a browser tab and non-zero only when the app is installed". That is true on iOS
+   * and FALSE on Android: `viewport-fit=cover` is set unconditionally (see app/layout), so in a
+   * tab Gecko reports the system navigation/gesture strip here, and reports it CHANGING as
+   * Firefox's bottom address bar collapses and expands. The bar then padded itself by that
+   * amount, which the reader sees as the icons jumping up with a blank band underneath them.
+   * Reported on Firefox for Android, where the address bar sits at the BOTTOM by default and so
+   * collapses directly underneath this element.
+   *
+   * `display-mode: standalone` is the honest test, and it is available now: the app ships a
+   * manifest with `display: standalone`, and `packages/ui/theme.css` already defines the
+   * `standalone:` variant on the same query for three other components. In a tab the browser's
+   * own chrome occupies that strip, so there is nothing for us to reserve.
+   */
+  --bottom-nav-inset: 0px;
+}
+
+@media (display-mode: standalone) {
+  :root {
+    --bottom-nav-inset: env(safe-area-inset-bottom);
+  }
+}
+:root[data-chrome='hidden'] {
+  --chrome-h: 0rem;
+}
+
+/**
+ * THE SCROLLBAR GUTTER IS ALWAYS RESERVED.
+ *
+ * Every page in this app scrolls the document, except Chat, which is a fixed-height column
+ * whose panes scroll internally. So navigating to Chat removed the document scrollbar and
+ * navigating away put it back, and on any platform with classic (space-taking) scrollbars , 
+ * Linux, Windows, and macOS with "always show scroll bars", the whole centred layout jumped
+ * sideways by the scrollbar's width each way. The left rail visibly moved, which is exactly
+ * what it looked like: the rail moving, rather than the page under it changing width.
+ *
+ * `stable` keeps the gutter there whether or not anything is scrolling, so the layout box is
+ * the same on every route. Overlay-scrollbar platforms are unaffected: their scrollbar takes
+ * no space, so there is no gutter to reserve and nothing changes.
+ */
+html {
+  scrollbar-gutter: stable;
+
+  /*
+   * HDR PHOTOS ARE SHOWN AT SDR BRIGHTNESS.
+   *
+   * A phone's camera writes a JPEG with a GAIN MAP attached, a second image saying how much
+   * brighter each highlight should be on a display that can do it (MPF + ISO 21496-1 + the
+   * `hdrgm:` XMP block). Chrome and Safari honour it, so on an XDR or any HDR panel that one
+   * photo is painted past white while every other photo, every avatar and the page itself stay
+   * at SDR. Reported as "only nostrich.org shows them really bright", and it is: two notes were
+   * measured, both carrying gain maps.
+   *
+   * Other clients look normal for a reason that is not available to us. another client serves its own
+   * re-encoded copy, measured on the same photo: 1000x752 and 70KB against the author's
+   * 2040x1536 and 426KB, with MPF, the XMP and the ISO metadata all gone, so the gain map is
+   * destroyed in their cache before a browser ever sees it. We deliberately host and proxy no
+   * media, which means we always hand the browser the author's original file,
+   * gain map and all. The re-encode is not a fix available to this codebase, and would not be
+   * worth having if it were.
+   *
+   * So it is clamped at RENDER time instead, which changes no bytes and nothing on the network.
+   * `standard` is the whole-document setting because the property inherits: pictures, video,
+   * avatars and banners all land at the same brightness as the rest of the page, which is the
+   * point, a timeline is a comparison, and one image lit brighter than its neighbours reads as
+   * a fault in the client rather than as a property of the photograph.
+   *
+   * Browsers without the property ignore the line and keep showing HDR, which is exactly the
+   * behaviour they have today.
+   */
+  dynamic-range-limit: standard;
+}
+
+
+/**
+ * NOTHING HERE ANIMATES WHILE A FINGER IS MOVING.
+ *
+ * These four follow `--chrome-p`, a 0-to-1 ratio written by lib/chrome.ts once per scroll frame,
+ * so the bar tracks the scroll in the same frame that produced it. A transition would be a second
+ * animator of the same pixels, and `.chrome-top` and `.chrome-tabs` are `position: sticky`,
+ * which WebKit repositions on the main thread during a scroll, so the two fought every frame.
+ * That measured clean in a headless browser and was reported three times from an iPhone.
+ *
+ * The ONE exception is `data-chrome-settle`, added after the scroll has stopped so a bar left
+ * half way can pick an end. Animating is safe there precisely because nothing is scrolling.
+ */
+:root[data-chrome-settle] .chrome-top,
+:root[data-chrome-settle] .chrome-tabs,
+:root[data-chrome-settle] .chrome-bottom,
+:root[data-chrome-settle] .chrome-float,
+:root[data-chrome-settle] .chrome-pill {
+  transition:
+    transform 160ms ease-out,
+    opacity 160ms ease-out;
+}
+
+/**
+ * A SKIRT OF THE BAR'S OWN COLOUR, HANGING BELOW IT.
+ *
+ * Firefox for Android does not keep a `position:fixed; bottom:0` element on the bottom of the
+ * visible viewport while its dynamic toolbar collapses, it leaves the element sitting above
+ * the true edge with the page showing through underneath (Mozilla bug 1880375: the footer
+ * "moves further upwards on the screen than expected"; bug 1516048 is the missing transitional
+ * stick; fenix#17991 reports the "empty strip" directly). Nothing in CSS can reposition it,
+ * because the browser's own idea of where the bottom is is the thing that is wrong.
+ *
+ * So the gap is made invisible instead of fixed: the bar paints its background on past its own
+ * box, and whatever strip Gecko leaves under it is filled with the colour it would have had.
+ * Off-screen and unpaintable in every browser that positions the bar correctly, which is all of
+ * them but this one, so it costs nothing anywhere else and needs no user agent sniffing.
+ *
+ * `will-change: transform` used to sit on these three. It was removed with this: it promoted a
+ * fixed element to a permanent compositor layer, which is what the MDN guidance explicitly
+ * warns against and is a plausible aggravator of exactly this desync. The transition still
+ * composites without the hint.
+ */
+.chrome-bottom::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: var(--color-bg);
+  /* Purely paint. It must never swallow a tap on the page it is drawn. */
+  pointer-events: none;
+}
+
+/* Scoped to phones. The desktop layout has neither bar, and `sm:` utilities already pin the
+   sticky offsets there, so the attribute must not reach it. */
+@media (max-width: 639px) {
+  /* THE HEADER AND THE STRIP MOVE AS ONE BAR, same distance, therefore same speed.
+     They sit flush and read as one thing, so they share `--chrome-travel`, measured by
+     lib/chrome.ts from their real heights. The header overshoots by the strip's height, which
+     costs nothing above the viewport, and neither a re-measured strip nor a route without one
+     can leave the number stale. `--chrome-p` is the ratio the finger is driving. */
+  /**
+   * THE HEADER AND THE TAB STRIP ARE PAGE CONTENT ON A READING SURFACE. NOT STICKY, NOT MOVED.
+   *
+   * Four rounds of this were spent making JavaScript move them convincingly, and the last report
+   * is the one that ends the argument: "header still moves independently than the rest of the
+   * page". It always will. The page scrolls on the compositor and a JS transform lands a frame
+   * later, so at fling speed the bar and the notes under it are tens of pixels apart. No easing,
+   * threshold or frame loop closes that gap, it is a race between two different clocks.
+   *
+   * So the browser scrolls them, exactly as it scrolls every note beneath them. They cannot lag
+   * the page because they ARE the page. Nothing here is animated, nothing is measured, and the
+   * `--chrome-p` machinery no longer touches them.
+   *
+   * Three complaints go together:
+   *   · welded to the content, by construction rather than by tuning;
+   *   · the tabs hide while reading, which is where this started;
+   *   · the composer can no longer slide UNDER the tabs, because nothing is pinned above it.
+   *
+   * The cost, stated plainly: they come back when the reader returns to the top of the feed,
+   * not the instant a finger moves upward. That was the trade taken deliberately.
+   *
+   * Only on reading surfaces, `data-chrome-scrolls`, set by the same predicate that decides
+   * whether the bars react to scrolling at all. A settings page keeps its pinned header.
+   */
+  :root[data-chrome-scrolls] .chrome-top,
+  :root[data-chrome-scrolls] .chrome-offset {
+    position: static;
+  }
+
+  /**
+   * EXCEPT ON THE WAY BACK: the logo bar returns the moment the reader scrolls up.
+   *
+   * Asked for as a deliberate split, "separate logo area from tabs and composer so as soon as I
+   * start scrolling up the logo area appears", and it is safe for precisely the reason the tabs
+   * are not included. Hiding has to travel alongside the notes, so any JS in that loop shows as
+   * daylight between them; arriving does not, because a bar coming over content is an overlay
+   * with nothing to stay level with. 200ms reads as intended there rather than as lag.
+   *
+   * The tabs and the composer stay in the column, where floating either would separate them from
+   * it again, which is what put the composer under the tabs in the first place.
+   */
+  /*
+   * `sticky`, NOT `fixed`, and this is a feedback loop, not a preference.
+   *
+   * A fixed element leaves the flow. Pinning a 64px header that way makes the document 64px
+   * shorter in the same frame, which moves the content under the reader AND changes `scrollY` , 
+   * which is the very thing the scroll loop is reading to decide whether to pin it. It flips
+   * back, the 64px returns, and it flips again: reported as "logo area moves so quickly up and
+   * down", and it is the code arguing with itself several times a second.
+   *
+   * Sticky keeps its place in the flow. The document does not change height, nothing moves under
+   * the reader, and `scrollY` is untouched, so the decision cannot feed back into itself.
+   */
+  :root[data-chrome-scrolls][data-chrome-peek] .chrome-top {
+    position: sticky;
+    top: 0;
+  }
+  /*
+   * KEYFRAMES, NOT A TRANSITION, and the difference is the whole effect.
+   *
+   * The bar goes from being page content scrolled off the top to being fixed at the top in ONE
+   * frame. A transition has no previous value to move from in that frame, so it would simply
+   * appear, which is the blink this is meant to replace. An animation carries its own start.
+   */
+  :root[data-chrome-scrolls][data-chrome-peek='in'] .chrome-top {
+    animation: chrome-peek-in 200ms ease-out both;
+  }
+  /* And back off the top, held there by `both` until lib/chrome.ts drops it to page content , 
+     without the fill it would snap back to visible on the last frame of its own exit. */
+  :root[data-chrome-scrolls][data-chrome-peek='out'] .chrome-top {
+    animation: chrome-peek-out 200ms ease-out both;
+  }
+  /* Translated, never removed: the strip is a sticky band in the flow, and dropping it
+     mid-scroll moves every row under the reader's thumb. Its transform is shared with the
+     header above. */
+  /* AND IT MUST NOT SWALLOW TAPS WHILE IT IS GONE.
+     The strip is translated out of its sticky parent, but the parent keeps its box, a
+     transparent 52px band pinned at 4rem, on top of the timeline at z-30. Without this it eats
+     every tap that lands there while the chrome is hidden, on notes the reader can plainly see.
+     Same reason the pill below carries it. */
+  :root[data-chrome='hidden'] .chrome-offset {
+    pointer-events: none;
+  }
+  .chrome-bottom {
+    /* Its own height, safe-area padding included, clears a notched phone without a
+       per-device number. `100%` of ITSELF, scaled by the same ratio the top bar uses, so the
+       two ends of the screen leave together however differently tall they are. */
+    transform: translateY(calc(var(--chrome-p, 0) * 100%));
+  }
+  /* The "Show N notes" band.
+     Faded rather than translated away: it is sticky BELOW the tab strip, so sliding it out
+     would drag it across the tabs on the way (it sits at a higher z-index than they do).
+     And it must not leave the flow, removing a ~56px band while the reader is mid-scroll
+     jumps the whole timeline under their thumb. Fading in place costs no layout at all.
+     `pointer-events: none` so an invisible band cannot swallow a tap on the note beneath. */
+  .chrome-pill {
+    transform: translateY(calc(var(--chrome-p, 0) * -8px));
+    opacity: calc(1 - var(--chrome-p, 0));
+  }
+  /* Only once it is actually gone: a band at 40% opacity is still something the reader can see
+     and may be reaching for. */
+  :root[data-chrome='hidden'] .chrome-pill {
+    pointer-events: none;
+  }
+  .chrome-float {
+    /* 135px = the button's 56px height plus the 79px it floats above the bottom edge, so it
+       leaves the screen entirely rather than half-hanging off it. Keep this in step with the
+       `bottom-[…]` on the button itself, the two are one measurement in two places. */
+    transform: translateY(calc(var(--chrome-p, 0) * (135px + var(--bottom-nav-inset))));
+    opacity: calc(1 - var(--chrome-p, 0));
+  }
+}
+
+/**
+ * SOMEBODY WHO ASKED FOR LESS MOTION GETS NONE OF THIS, and all of it, not most of it.
+ *
+ * `.chrome-tabs` was missing from this list while being in the transition list above, which is
+ * the worst of both: with Reduce Motion on, the header vanished in a single frame while the tab
+ * strip flush against it still glided up over 200ms. One snapping and one sliding is not less
+ * motion, it is broken motion, and it is what "all of a sudden flashy disappearing" describes.
+ *
+ * Note what this means on a phone with the setting ON: the bars jump rather than slide, by
+ * design. That is the setting doing its job, not a bug, but the two halves must agree.
+ */
+@keyframes chrome-peek-in {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes chrome-peek-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /*
+   * The settle is the only animation left, so it is the only thing to switch off, and it must
+   * be switched off at the SAME specificity that turned it on, or the `:root[…]` selector simply
+   * wins and the transition runs anyway. That mismatch is what this block used to have: it
+   * listed `.chrome-top` and not `.chrome-tabs`, so with Reduce Motion on the header jumped in
+   * one frame while the strip flush against it still glided.
+   *
+   * Tracking the scroll is NOT switched off, and should not be: it is not autonomous motion, it
+   * is the reader's own finger moving something under it, at exactly their speed.
+   */
+  :root[data-chrome-settle] .chrome-top,
+  :root[data-chrome-settle] .chrome-tabs,
+  :root[data-chrome-settle] .chrome-bottom,
+  :root[data-chrome-settle] .chrome-float,
+  :root[data-chrome-settle] .chrome-pill {
+    transition: none;
+  }
+  /* The logo bar's arrival is an animation, so it needs switching off in its own terms. `both`
+     is kept: without a fill it would end up visible at the end of its own exit. */
+  :root[data-chrome-peek] .chrome-top {
+    animation-duration: 1ms;
+  }
+}
+
+/**
+ * THE ONE FRAME WHERE THE BARS MAY MOVE WITHOUT ANIMATING.
+ *
+ * A feed restore puts the reader back where they were, and the chrome is part of where they
+ * were: deep in a timeline the header is gone and the tab strip is pinned at the top of the
+ * screen. But opening a note reveals the chrome (a note opens at ITS top, which is correct
+ * there), so the return trip starts with the header on screen and the strip 64px below it, and
+ * the restore's own scroll jump then slides both away in front of the reader. Filmed: 300ms of
+ * the Trending/Following strip travelling up the screen on every back-swipe.
+ *
+ * `lib/chrome.ts` sets this attribute, changes the state, forces a reflow and removes it again,
+ * so the restored position is the first one drawn instead of the end of an animation. It is on
+ * <html> for a single synchronous reflow and is never left behind.
+ *
+ * `.chrome-offset` is the sticky tab strip, whose `top` follows `--chrome-h`, its transition
+ * is a Tailwind utility on the element, and the descendant selector here outranks it without
+ * needing `!important`.
+ */
+:root[data-chrome-snap] .chrome-top,
+:root[data-chrome-snap] .chrome-tabs,
+:root[data-chrome-snap] .chrome-bottom,
+:root[data-chrome-snap] .chrome-float,
+:root[data-chrome-snap] .chrome-pill,
+:root[data-chrome-snap] .chrome-offset {
+  transition: none;
+}
+
+/* Two-line truncation for the trending rows.
+   Tailwind v4 ships line-clamp, but spelling it out here keeps the rule visible next to the
+   no-scrollbar utility it sits beside, and avoids depending on plugin availability. */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* Nothing a stranger typed may widen the layout.
+   `overflow-wrap` inherits, so setting it on the columns covers every descendant, note
+   bodies, bios, pasted URLs, npubs, and CJK text that has no spaces to break at. The
+   per-component fixes were whack-a-mole; this is the rule that actually holds.
+   `break-word` rather than `anywhere` so ordinary prose still breaks at spaces first. */
+.feed-column,
+.aside-column {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+
+/* Material Symbols sizing.
+   Google's stylesheet is injected as a <head> child, so it loads AFTER Next's CSS, and its
+   `.material-symbols-outlined{font-size:24px}` has the same specificity as a Tailwind size
+   utility. Later wins, so every icon size we set was silently discarded.
+   The size utilities on those spans therefore carry `!`, which order cannot beat. This rule
+   only fixes line-height, which the glyphs need to sit on their own baseline. */
+.material-symbols-outlined {
+  line-height: 1;
+}
+
+/*
+ * The article editor's writing surface.
+ *
+ * ProseMirror renders real elements, <h2>, <ul>, <blockquote>, into a contenteditable, so the
+ * only way to style them is a descendant rule. Tailwind utilities cannot reach nodes the editor
+ * creates at runtime, which is the same constraint `[data-note-body]` above exists for.
+ *
+ * The numbers are not new: they are MarkdownBody's, deliberately. What the author sees while
+ * writing and what a reader gets on the published page are the same typography, so the preview
+ * confirms the layout rather than revealing it.
+ */
+.article-prose {
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--color-text);
+  /* The empty state is a page to fill, not a line to fill in. A one-line box invites a note;
+     this is the surface an article gets written on, and it should look like one before the
+     first keystroke. It only ever grows from here, the editor sizes to its content.
+     18rem and not more: at 28rem the empty box ran past the fold on a laptop, so the tag
+     field and the draft note below it were off-screen until you scrolled an empty page. */
+  min-height: 18rem;
+}
+.article-prose > * + * {
+  margin-top: 1.25rem;
+}
+.article-prose h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.375;
+  margin-top: 2rem;
+}
+.article-prose h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.375;
+  margin-top: 1.5rem;
+}
+.article-prose h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+}
+.article-prose a {
+  color: var(--color-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.article-prose ul,
+.article-prose ol {
+  padding-left: 1.5rem;
+}
+.article-prose ul {
+  list-style: disc;
+}
+.article-prose ol {
+  list-style: decimal;
+}
+.article-prose li::marker {
+  color: var(--color-text-faint);
+}
+.article-prose blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding-left: 1rem;
+  color: var(--color-text-muted);
+}
+.article-prose code {
+  background: var(--color-bg-inset);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+}
+.article-prose pre {
+  background: var(--color-bg-inset);
+  border-radius: 12px;
+  padding: 1rem;
+  overflow-x: auto;
+}
+.article-prose pre code {
+  background: none;
+  padding: 0;
+}
+.article-prose img {
+  border-radius: 12px;
+  max-width: 100%;
+  height: auto;
+}
+.article-prose hr {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+/* The selected image, so clicking one shows it is selected before Backspace removes. */
+.article-prose img.ProseMirror-selectednode {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* The placeholder. ProseMirror keeps one empty paragraph in an empty document, so there is a
+   node to hang this on; `pointer-events: none` keeps a click on the text landing in the editor
+   rather than on the hint. */
+.article-prose p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-faint);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/*
+ * The dialog container itself never shows a focus ring.
+ *
+ * `openModal` moves initial focus to the <dialog> so it does not land on the ✕ (see
+ * lib/modal.ts). A dialog is a container, not a control, it is not somewhere a keyboard user
+ * navigates TO, so the ring the global :focus-visible rule draws around it is noise, and on a
+ * phone it read as a purple border around the whole composer.
+ *
+ * Scoped to `[tabindex="-1"]`, which is exactly the dialogs that opt into being focused this
+ * way. Everything INSIDE keeps its ring: that is where a keyboard user actually goes.
+ */
+dialog[tabindex="-1"]:focus,
+dialog[tabindex="-1"]:focus-visible {
+  outline: none;
+}
+
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * THE ACTION ROW, reply, repost, zap, like, bookmark
+ *
+ * Every number here was tuned by eye as a set, so changing one in isolation is how the row
+ * stops looking right.
+ *
+ * NOT Tailwind utilities, because three of these are keyframed animations and one is a
+ * `color-mix` off a per-action custom property, expressible as utilities only by inventing a
+ * class per action per state. The row's LAYOUT is still utilities; this is the paint.
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
+/*
+ * THE −7.5px IS THE HOVER CIRCLE, GIVEN BACK.
+ *
+ * Each glyph is 19px centred in a 34px circle, so an action's ink starts 7.5px inside its own
+ * box, and the row's first box starts at the note's text column. The reply bubble therefore
+ * sat a visible notch right of the body text above it, which is the one thing a row directly
+ * under a paragraph must not do.
+ *
+ * Pulled out at BOTH ends rather than just the left: the four flexible actions then share
+ * 15px more, so the five icons fan out by −7.5, −3.75, 0, +3.75, +7.5, the even rhythm below
+ * is preserved exactly, just fractionally wider, and the bookmark ends up flush with the right
+ * edge of the column the same way reply is with the left. A left-only pull would have slid the
+ * whole rhythm sideways instead.
+ *
+ * It overhangs into the card's 12px avatar gutter and its 16px right padding, both of which
+ * have the room; nothing on this path clips.
+ */
+.action-row {
+  display: flex;
+  align-items: center;
+  margin: 4px -7.5px 2px;
+}
+
+/* Every action gets an equal slice, so the icon centres land on an even rhythm. The last one
+   has no count, so it hugs the right edge instead of leaving a dead slot. */
+.action {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  appearance: none;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  /* Buttons centre their text, and `.action-num` has a min-width, so a short count like "34"
+     was centred in a 30px box and sat further from its icon than a wide one like "1.2K". */
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  color: var(--color-text-faint);
+  cursor: pointer;
+  border-radius: 999px;
+  transition: color 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  /* A press on the bolt is a gesture, not a scroll, and on iOS a long press would otherwise
+     raise the callout menu over the button being held. */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+.action:last-child {
+  flex: 0 0 auto;
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* On hover the icon and count take the action's accent, and the circle behind them picks up a
+   tint of the same accent. The flat grey is the fallback where `color-mix` is missing. */
+.action:hover {
+  color: var(--accent);
+}
+
+.action:hover .action-ico {
+  background: var(--color-action-hover);
+  background: color-mix(in srgb, var(--accent) var(--color-action-tint), transparent);
+}
+
+.action.is-on {
+  color: var(--accent);
+}
+
+.action.is-on .action-ico svg {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+/* Two arrows looping is an OPEN path: filling it floods the gaps between the strokes rather
+   than the glyph, and the reposted state came out as a pair of solid green blobs. */
+.action.action-repost.is-on .action-ico svg {
+  fill: none;
+}
+
+.action-ico {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  transition:
+    background 0.18s ease,
+    transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.5);
+}
+
+.action-ico svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* The charge glow is a drop-shadow that reaches past the 24 grid; without this it is clipped
+     to the glyph's own box and the bolt looks like it is lighting up a square. */
+  overflow: visible;
+  transition:
+    fill 0.2s ease,
+    stroke 0.2s ease,
+    filter 0.2s ease;
+}
+
+.action-num {
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  min-width: 30px;
+  /* `margin-left` is set at runtime by the bearing measurement, see lib/fx/bearing.ts. It
+     cannot be hardcoded: it depends on which font the browser resolved and on the count's
+     leading digit. */
+}
+
+.action-reply {
+  --accent: var(--color-action-reply);
+}
+.action-repost {
+  --accent: var(--color-action-repost);
+}
+.action-like {
+  --accent: var(--color-action-like);
+}
+.action-zap {
+  --accent: var(--color-zap-icon);
+}
+.action-bookmark {
+  --accent: var(--color-action-reply);
+}
+
+/* ── the bolt ──────────────────────────────────────────────────────────────. */
+
+.action-zap .action-ico {
+  transform: scale(calc(1 + var(--charge, 0) * 0.2));
+}
+
+.action-zap.is-charging {
+  color: var(--color-zap-icon);
+}
+
+.action-zap.is-charging .action-ico {
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--color-zap-icon) calc(18% + var(--charge, 0) * 38%), transparent),
+    color-mix(in srgb, var(--color-zap-icon) 3%, transparent) 72%
+  );
+}
+
+.action-zap.is-charging .action-ico svg {
+  filter: drop-shadow(0 0 calc(2px + var(--charge, 0) * 12px) var(--color-zap-glow));
+}
+
+/* Fully charged. Keep holding and the menu takes. */
+.action-zap.is-brimming .action-ico svg {
+  animation: zap-brim 0.38s ease-in-out infinite alternate;
+}
+
+@keyframes zap-brim {
+  from {
+    filter: drop-shadow(0 0 9px var(--color-zap-glow));
+  }
+  to {
+    filter: drop-shadow(0 0 20px var(--color-zap-icon));
+  }
+}
+
+.action-zap.is-zapped {
+  color: var(--color-zap-icon);
+}
+
+.action-zap.is-zapped .action-ico svg {
+  fill: var(--color-zap-icon);
+  stroke: var(--color-zap-icon);
+  filter: drop-shadow(0 0 7px var(--color-zap-glow));
+}
+
+/* ── the two taps ──────────────────────────────────────────────────────────. */
+
+.action-ico.is-popping {
+  animation: action-pop 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.5);
+}
+
+@keyframes action-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.32);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.action-num.is-bumping {
+  animation: action-bump 0.4s ease;
+}
+
+@keyframes action-bump {
+  0% {
+    transform: translateY(0);
+  }
+  28% {
+    transform: translateY(-7px);
+    opacity: 0.15;
+  }
+  56% {
+    transform: translateY(4px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* ── the card, struck ──────────────────────────────────────────────────────. */
+
+/* The note itself flashes when it is zapped. It is what makes the discharge land ON something
+   rather than floating over the page.
+ *
+ * A HALO ONLY. There used to be a `0 0 0 1px` ring under this glow, outlining the card in amber
+ *, and on three sides of a card you could not see it, because a 45%-alpha hairline against the
+ * card's own background is nothing. The fourth side was the problem: `[data-note-card]`'s bottom
+ * edge sits on the SAME pixel row as the divider under the action row, so the one edge with
+ * something to contrast against repainted a structural grey rule amber. On the note page, where
+ * the timestamp sits directly beneath, it read as "the separator turns yellow for half a second"
+ * rather than as anything to do with a zap.
+ *
+ * INSET, which is the other half of the same bug. An outer box-shadow paints only OUTSIDE the
+ * border box, so a 44px amber bloom on `[data-note-card]` never touched the note at all, it lit
+ * the page around it, and the nearest surface is the strip under the divider where the timestamp
+ * sits. The card the zap was aimed at was the one thing in frame that did not change. Inset, the
+ * same 44px glows inward from the card's own edges: the note lights up, nothing outside it does,
+ * and on a timeline the flash can no longer bleed onto the neighbours above and below. */
+.note-lit {
+  animation: note-lit 0.45s ease-out;
+}
+
+@keyframes note-lit {
+  0% {
+    box-shadow: inset 0 0 44px var(--color-lit);
+  }
+  /* `inset` on both ends: box-shadow only interpolates between shadows of the same kind, and
+     dropping the keyword here would make the fade a hard cut. */
+  100% {
+    box-shadow: inset 0 0 0 transparent;
+  }
+}
+
+/* ── the joining-day balloons ────────────────────────────────────────────────
+ *
+ * Two nested animations rather than one: the outer element climbs, the inner one leans. Written
+ * as a pair because a single keyframe combining `translateY` and `translateX` would have to
+ * spell out the vertical position at every sway step, and the two have different durations on
+ * purpose, the balloon sways twice per climb, whatever the climb is.
+ *
+ * `will-change` is deliberately absent. Five elements for ten seconds do not need a permanent
+ * layer promised in advance; `transform` and `opacity` are composited anyway.
+ */
+.balloons {
+  position: fixed;
+  inset: 0;
+  /* 45: above the rails and the mobile chrome, which sit at 40, and below the menus and modals
+     at 50. At 40 the balloons tied with the left rail and were painted behind it, five of them
+     drifting up a column nobody could see. */
+  z-index: 45;
+  overflow: hidden;
+  /* The profile underneath goes on working. */
+  pointer-events: none;
+  user-select: none;
+}
+
+.balloon-rise {
+  position: absolute;
+  /* Below the fold to start with, and well clear of it: a balloon must not appear. */
+  bottom: -18vh;
+  animation-name: balloon-rise;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+.balloon-sway {
+  display: block;
+  animation-name: balloon-sway;
+  animation-timing-function: ease-in-out;
+  animation-direction: alternate;
+  animation-iteration-count: infinite;
+}
+
+.balloon-glyph {
+  display: block;
+  line-height: 1;
+  /* The emoji is opaque ink. */
+  filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.18));
+}
+
+@keyframes balloon-rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  /* Faded in over the first stretch, so nothing pops into existence at the bottom edge. */
+  8% {
+    opacity: 1;
+  }
+  /* And out before the top, so it leaves rather than being clipped by the viewport. */
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-135vh);
+    opacity: 0;
+  }
+}
+
+@keyframes balloon-sway {
+  from {
+    transform: translateX(calc(var(--balloon-drift) * -1)) rotate(-4deg);
+  }
+  to {
+    transform: translateX(var(--balloon-drift)) rotate(4deg);
+  }
+}
+
+/* The setting means "do not move things". A balloon parked over a profile is worse than none,
+   so the component renders nothing at all, this is the belt to that braces. */
+@media (prefers-reduced-motion: reduce) {
+  .balloons {
+    display: none;
+  }
+}
+
+/* ── the zap panel ───────────────────────────────────────────────────────────
+ *
+ * The two things Tailwind cannot say here: a dialog's open/close transition, which needs the
+ * `[open]` state and `allow-discrete` to animate from `display: none`, and the dashed outline
+ * every tile takes while the templates are being edited.
+ */
+
+.zap-panel {
+  transform: translateY(12px) scale(0.94);
+  transition:
+    transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.45),
+    opacity 0.18s ease,
+    display 0.24s allow-discrete;
+  opacity: 0;
+}
+
+.zap-panel[open] {
+  transform: none;
+  opacity: 1;
+}
+
+@starting-style {
+  .zap-panel[open] {
+    transform: translateY(12px) scale(0.94);
+    opacity: 0;
+  }
+}
+
+/* Editing is a MODE, and the tiles say so: every one becomes a dashed slot, and the one being
+   edited fills in. Without this the grid looks identical in both modes and a press does
+   something different depending on a state nothing is showing. */
+.zap-grid-editing .zap-tile {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--color-zap-icon) 42%, transparent);
+}
+
+.zap-grid-editing .zap-tile.border-text {
+  border-style: solid;
+  border-color: var(--color-zap-icon);
+  background: color-mix(in srgb, var(--color-zap-icon) 17%, transparent);
+}
+
+.zap-tile:hover {
+  background: color-mix(in srgb, var(--color-zap-icon) 15%, transparent);
+}

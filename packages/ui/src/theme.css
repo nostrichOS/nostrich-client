@@ -1,0 +1,433 @@
+/*
+ * Tailwind v4 theme for Nostrich. There is no tailwind.config.js, v4 configures from
+ * CSS, and this file is that configuration.
+ *
+ * The web app's globals.css must import it AFTER Tailwind itself:
+ *
+ *   @import 'tailwindcss';
+ *   @import '@nostrich/ui/src/theme.css';
+ *
+ * Values here mirror packages/ui/src/tokens.ts, which is the source of truth; CSS cannot
+ * import TypeScript, so the two are kept in step by hand and `themeStylesheet()` from
+ * @nostrich/ui emits exactly the :root block below for comparison.
+ *
+ * ONE PALETTE. The page is light, always: there is no theme switch and no second block of
+ * values.
+ */
+
+/**
+ * `standalone:`, the app launched from a home screen or a dock, not a browser tab.
+ *
+ * Usable at all only since this app started serving a web app manifest: `display-mode` is
+ * decided from it, and with none the query never matched anywhere. There is a note in
+ * `layout.tsx` about the insets that were tried against this and abandoned for exactly that
+ * reason.
+ *
+ * For chrome that exists only when the BROWSER's chrome does not, an installed window has no
+ * address bar to close the page off at the top, so a column that runs to the edge reads as
+ * unfinished there and reads as correct in a tab.
+ */
+@custom-variant standalone (@media (display-mode: standalone));
+
+@theme {
+  /* Brand scale, hue 250° / sat 31% throughout. 500 = 5.99:1 on white (AA body, and safe
+     as a button fill with white text); 600 = 8.17:1 (AAA, links and emphasis). 400 and
+     lighter fail AA as body text on white and are fills and borders only. */
+  --color-lavender-purple-50: #fafafa;
+  --color-lavender-purple-100: #e0deed;
+  --color-lavender-purple-200: #c1bcdc;
+  --color-lavender-purple-300: #a39bca;
+  --color-lavender-purple-400: #8479b9;
+  --color-lavender-purple-500: #6558a7;
+  --color-lavender-purple-600: #514686;
+  --color-lavender-purple-700: #3d3564;
+  --color-lavender-purple-800: #282343;
+  --color-lavender-purple-900: #141221;
+  --color-lavender-purple-950: #0a0a0a;
+
+  /* Overrides Tailwind's stock `neutral`, on purpose: a stray `text-neutral-500` should
+     land on the brand-tinted grey rather than on a foreign one. Same 250° hue as the
+     purple at 14–28% saturation, a true grey next to this purple reads as dirty green. */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #cacaca;
+  --color-neutral-400: #9a9a9a;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
+  --color-neutral-950: #0a0a0a;
+
+  /* Status colours. Hues are spread 352° / 20° / 46° so danger, warning and the zap gold
+     stay 26–28° apart; warning is pushed toward vermilion specifically so it cannot be
+     mistaken for a zap. */
+  --color-success-solid: #217d52;
+  --color-success-light: #1c6e48;
+  --color-warning-solid: #a54a1d;
+  --color-warning-light: #954218;
+  --color-danger-solid: #bf2237;
+  --color-danger-light: #ab1c2f;
+
+  /* Zaps are lightning payments and the best thing that can happen to a note, so they get an
+     identity of their own instead of borrowing `warning`. Gold: #e08a00 is what that identity
+     has to be on white, where the bright gold measures 1.83:1 and disappears. `-glow` is the
+     effects hue and stays bright, see apps/web/lib/fx. */
+  --color-zap-solid: #e08a00;
+  --color-zap-light: #e08a00;
+  --color-zap-glow: #ffb020;
+
+  /* System fonts, no webfont: a timeline is user text in arbitrary scripts, and a webfont
+     costs a render-blocking round trip plus a flash of invisible text on first paint. */
+  --font-sans:
+    ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  /* Line heights are absolute rather than multipliers so mixed sizes still land on the
+     4px grid. Negative tracking starts at xl, where the system stack starts to look loose. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-xl--letter-spacing: -0.01em;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-2xl--letter-spacing: -0.014em;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.375rem;
+  --text-3xl--letter-spacing: -0.018em;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 2.75rem;
+  --text-4xl--letter-spacing: -0.02em;
+
+  /* v4 derives every numeric spacing utility from this one value, so a 4px base is a
+     single declaration rather than a table. */
+  --spacing: 0.25rem;
+
+  /* Tighter than a typical default on purpose. The first pass used 12-24px everywhere and
+     every card read as a pill. `lg` (8px) is the house standard for cards, inputs and
+     buttons alike; `full` is reserved for genuinely circular things. Mirrors tokens.radius,
+     so native gets the same geometry. */
+  --radius-sm: 0.1875rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.625rem;
+  --radius-2xl: 0.75rem;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring: cubic-bezier(0.2, 0.9, 0.25, 1.1);
+}
+
+/*
+ * Surface roles. Components reference these, never a shade, so changing the palette is a
+ * value swap in one place.
+ *
+ * They live in a plain `:root` rule rather than inside `@theme` because Tailwind only
+ * emits a theme variable it can prove some utility uses; a role referenced solely from
+ * hand-written CSS would disappear from the output. The `@theme inline` block further
+ * down aliases them into Tailwind's colour namespace, so both spellings work.
+ *
+ * LIGHT is the default theme. Elevation cannot go brighter than a white page, so cards
+ * lift by taking a faint tint plus a shadow and insets recede one step further. That
+ * makes neutral-100, not white, the worst case every text role has to clear:
+ *   text 15.97:1, textMuted 7.11:1, textFaint 4.89:1, accentText 7.27:1,
+ *   borderStrong 3.20:1 (WCAG 1.4.11 needs 3:1 for a form-control outline).
+ */
+:root {
+  color-scheme: light;
+
+  --role-bg: #ffffff;
+  --role-bg-elevated: #fafafa;
+  --role-bg-inset: #f5f5f5;
+  /*
+   * The surface a row takes while the pointer is on it.
+   *
+   * NOT `bgInset`, which the nav rows used to borrow. On white, #f5f5f5 is a 4% step and it
+   * read as nothing, the row looked inert while you were pointing at it. This is one further
+   * down the same ramp: still quiet, but unmistakably a response.
+   *
+   * A role of its own rather than reusing `border`: on this ground a hover goes DARKER, which
+   * is not what a border is for.
+   */
+  --role-hover: #ededed;
+  /*
+   * A CHIP'S RESTING SURFACE, the top-zapper pill, and anything else that is a small filled
+   * lozenge sitting ON a card rather than a row responding to a pointer.
+   *
+   * It exists because `hover` was being used for this, and a row responding to a pointer and
+   * a resting lozenge are different things that happened to share a value. Measured against
+   * the raised surface a note page draws the pill on: 1.12:1, quiet, but present.
+   */
+  --role-bg-chip: #ededed;
+  --role-border: #e5e5e5;
+  --role-border-strong: #9a9a9a;
+  /* The edge for a card filled with `bgInset`, where `border` is too close to the fill to
+     draw a line. One step further along the neutral scale, see tokens.ts. */
+  --role-border-inset: #cacaca;
+  --role-text: #171717;
+  --role-text-muted: #525252;
+  --role-text-faint: #737373;
+  /* Primary-navigation glyphs only. A cooler near-black than the brand-tinted ink above;
+     see `navIcon` in tokens.ts for why the whole rail takes it, active row or not. */
+  --role-nav-icon: #0f1419;
+
+  --role-accent: #6558a7;
+  --role-accent-hover: #514686;
+  --role-accent-active: #3d3564;
+  --role-accent-subtle: #fafafa;
+  --role-accent-border: #c1bcdc;
+  --role-accent-text: #514686;
+  --role-on-accent: #ffffff;
+  --role-focus-ring: #6558a7;
+
+  --role-success: #217d52;
+  --role-on-success: #ffffff;
+  --role-success-text: #1c6e48;
+  --role-success-surface: #effaf5;
+  --role-success-border: #b5e3ce;
+
+  --role-warning: #a54a1d;
+  --role-on-warning: #ffffff;
+  --role-warning-text: #954218;
+  --role-warning-surface: #fdf2ed;
+  --role-warning-border: #edc8b6;
+
+  --role-danger: #bf2237;
+  --role-on-danger: #ffffff;
+  --role-danger-text: #ab1c2f;
+  --role-danger-surface: #fdedef;
+  --role-danger-border: #efbec4;
+
+  --role-zap: #e08a00;
+  --role-on-zap: #ffffff;
+  /* The darker gold, because the bright one cannot exist here: #ffb020 is 1.83:1 on white.
+     #e08a00 is 2.69:1, under AA, deliberately, and lower than the #e36414 orange it replaces
+     (3.44:1). Taken as part of adopting the reference palette whole: the bolt beside it says
+     what the number is, and the amount is confirmable at full contrast in the zaps column.
+     It sits beside the reply blue (3.00:1) and the like pink (3.83:1) this row already carries. */
+  --role-zap-icon: #e08a00;
+  --role-zap-text: #e08a00;
+
+  /* The three /stats chart series. Computed, not chosen, see the `chart` const in tokens.ts
+     for the six checks and the measured numbers. Worst adjacent pair here is gold against
+     purple: ΔE 26.4 simulated, 29.3 unsimulated, and all three clear 3:1 on white and on the
+     #fafafa card. The gold is a step darker than `--role-zap-text` because a bar IS the value
+     and cannot lean on a bolt glyph beside it to say what it is. */
+  --role-chart-people: #0f6fd4;
+  --role-chart-sats: #ce7d00;
+  --role-chart-notes: #6558a7;
+
+  /**
+   * Link blue, for text an author is writing that will publish as a link.
+   *
+   * NOT #1d9bf0, the blue every social network uses and which this file already carries as
+   * the verified tick. Measured on white it is 3.00:1, under AA for body text, and the
+   * composer sets its field at 20px, which is not large enough to earn the 3:1 exemption.
+   * #0f6fd4 is the same hue at 4.95:1, so it passes AA as ordinary text and still reads as
+   * the blue people expect a link to be.
+   */
+  --role-link: #0f6fd4;
+  --role-zap-surface: #fff8e8;
+  --role-zap-border: #f6dda6;
+
+  /**
+   * THE ACTION ROW'S FIVE ACCENTS.
+   *
+   * Each action owns a hue so the row teaches what it does before anything is pressed, and the
+   * circle that appears behind an icon on hover is that same hue mixed down to `--role-action-tint`.
+   * Bookmark deliberately shares reply's blue: the two are never adjacent, and the glyph inside
+   * the circle is what names the action.
+   *
+   * These are network conventions rather than contrast decisions, a reader arrives already
+   * knowing that green is a repost and pink is a like, which is why they are hex literals here
+   * instead of being derived from the brand purple.
+   */
+  --role-action-reply: #1c84ea;
+  /* Chosen, not derived: these two are the colours the reference uses and the ones people
+     already read as "reposted" and "liked" on every other client. Same value in both themes,
+     so a like is one colour whichever ground it sits on. */
+  --role-action-repost: #00ba7c;
+  --role-action-like: #f91880;
+
+  /* How much of the accent shows through the hover circle. Lower on light, where a tint over
+     white reads stronger than the same tint over near-black. */
+  --role-action-tint: 14%;
+  /* Fallback for a browser without `color-mix`: a flat grey circle, which still says. */
+  --role-action-hover: rgba(15, 25, 40, 0.06);
+
+  /* The card's halo when it is zapped, see `.note-lit` in globals.css. One value, not two:
+     the 1px outline that used to pair with it repainted the divider under the action row. */
+  --role-lit: rgba(255, 160, 20, 0.28);
+
+  /* Neutral scrim. Was brand-tinted, which now reads as a purple wash over a grey UI
+     greys it out, a tinted one just darkens it. */
+  --role-overlay: rgb(10 10 11 / 0.55);
+
+  /* Shadows are tinted with purple-950 for the same reason, a black shadow under a card
+     sitting on a purple-tinted surface reads as grime. */
+  --role-shadow-sm: 0 1px 2px 0 rgb(14 12 23 / 0.06);
+  --role-shadow-md: 0 2px 4px -1px rgb(14 12 23 / 0.08), 0 4px 12px -2px rgb(14 12 23 / 0.06);
+  --role-shadow-lg: 0 4px 8px -2px rgb(14 12 23 / 0.1), 0 12px 28px -4px rgb(14 12 23 / 0.08);
+  --role-shadow-xl: 0 8px 16px -4px rgb(14 12 23 / 0.12), 0 24px 48px -8px rgb(14 12 23 / 0.1);
+  --role-shadow-zap-glow: 0 0 0 1px rgb(227 100 20 / 0.45), 0 4px 16px -2px rgb(227 100 20 / 0.35);
+
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-overlay: 1200;
+  --z-modal: 1300;
+  --z-popover: 1400;
+  --z-toast: 1500;
+  --z-tooltip: 1600;
+
+  /* Short on purpose: this is a timeline people scroll fast, and anything past ~250ms on
+     a hover or a tab change is felt as lag, not as polish. */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 240ms;
+  --duration-slower: 320ms;
+}
+
+@theme inline {
+  --color-bg: var(--role-bg);
+  --color-bg-elevated: var(--role-bg-elevated);
+  --color-bg-inset: var(--role-bg-inset);
+  --color-hover: var(--role-hover);
+  --color-bg-chip: var(--role-bg-chip);
+  --color-border: var(--role-border);
+  --color-border-strong: var(--role-border-strong);
+  --color-border-inset: var(--role-border-inset);
+  --color-text: var(--role-text);
+  --color-text-muted: var(--role-text-muted);
+  --color-text-faint: var(--role-text-faint);
+  --color-nav-icon: var(--role-nav-icon);
+
+  --color-link: var(--role-link);
+
+  --color-accent: var(--role-accent);
+  --color-accent-hover: var(--role-accent-hover);
+  --color-accent-active: var(--role-accent-active);
+  --color-accent-subtle: var(--role-accent-subtle);
+  --color-accent-border: var(--role-accent-border);
+  --color-accent-text: var(--role-accent-text);
+  --color-on-accent: var(--role-on-accent);
+  --color-focus-ring: var(--role-focus-ring);
+
+  --color-success: var(--role-success);
+  --color-on-success: var(--role-on-success);
+  --color-success-text: var(--role-success-text);
+  --color-success-surface: var(--role-success-surface);
+  --color-success-border: var(--role-success-border);
+
+  --color-warning: var(--role-warning);
+  --color-on-warning: var(--role-on-warning);
+  --color-warning-text: var(--role-warning-text);
+  --color-warning-surface: var(--role-warning-surface);
+  --color-warning-border: var(--role-warning-border);
+
+  --color-danger: var(--role-danger);
+  --color-on-danger: var(--role-on-danger);
+  --color-danger-text: var(--role-danger-text);
+  --color-danger-surface: var(--role-danger-surface);
+  --color-danger-border: var(--role-danger-border);
+
+  --color-zap: var(--role-zap);
+  --color-on-zap: var(--role-on-zap);
+  --color-zap-icon: var(--role-zap-icon);
+  --color-zap-text: var(--role-zap-text);
+  --color-zap-surface: var(--role-zap-surface);
+  --color-zap-border: var(--role-zap-border);
+
+  /* fill-chart-people, stroke-chart-sats, bg-chart-notes, text-chart-* …. */
+  --color-chart-people: var(--role-chart-people);
+  --color-chart-sats: var(--role-chart-sats);
+  --color-chart-notes: var(--role-chart-notes);
+
+  --color-action-reply: var(--role-action-reply);
+  --color-action-repost: var(--role-action-repost);
+  --color-action-like: var(--role-action-like);
+  --color-action-tint: var(--role-action-tint);
+  --color-action-hover: var(--role-action-hover);
+  --color-lit: var(--role-lit);
+
+  --color-overlay: var(--role-overlay);
+
+  --shadow-sm: var(--role-shadow-sm);
+  --shadow-md: var(--role-shadow-md);
+  --shadow-lg: var(--role-shadow-lg);
+  --shadow-xl: var(--role-shadow-xl);
+  --shadow-zap-glow: var(--role-shadow-zap-glow);
+}
+
+@layer base {
+  /*
+   * v4 no longer resets border-color, so a bare `border` utility paints currentColor , 
+   * i.e. text-coloured hairlines everywhere. Restoring the role default means `border`
+   * alone is correct on both themes.
+   */
+  *,
+  ::before,
+  ::after {
+    border-color: var(--role-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--role-bg);
+    color: var(--role-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /*
+   * Selection is the brand cream, not the accent.
+   *
+   * A literal rather than a role token, because selection has to stay legible over ANY
+   * background it lands on, a note, an inverted button, a dark media caption. The ink is
+   * fixed to the logo's own near-black for the same reason.
+   */
+  ::selection {
+    background-color: #f0dfc6;
+    color: #1f1b18;
+  }
+
+  /*
+   * :focus-visible only, a keyboard user must always see where they are, but a ring
+   * around every clicked avatar trains people to ignore it. The offset keeps the ring
+   * clear of the element's own border so it stays 3:1 against whatever is behind it.
+   */
+  :focus-visible {
+    outline: 2px solid var(--role-focus-ring);
+    outline-offset: 2px;
+  }
+
+  /*
+   * A feed of autoplaying media and sliding panes is exactly the content that triggers
+   * vestibular symptoms, so honour the OS switch globally rather than per component.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

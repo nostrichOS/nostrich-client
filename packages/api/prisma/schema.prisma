@@ -1,0 +1,43 @@
+// The entire server-side data model. It is this small on purpose.
+//
+// Notes, profiles, reactions and media are NOT here and must never be added. They live on
+// relays and on Blossom servers, which is what keeps this from being the data controller for
+// pseudonymous content it does not host. The one table below exists because ranking is the
+// same answer for everybody, so it is computed once rather than in every reader's browser.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// The ranked windows the API serves.
+///
+/// Ranking is the same answer for everybody, so it is computed once by the trending worker
+/// rather than in every reader's browser on every visit. A page load is one primary-key lookup.
+///
+/// It holds a snapshot of public notes and their authors' public profiles — already-public
+/// aggregate data, replaced wholesale every cycle, with no media and no per-reader rows.
+model TrendingSnapshot {
+  /// The window in hours: 1, 4 or 24. The same three the panel offers.
+  hours Int @id
+
+  /// The served JSON: notes, their authors' profiles, and our scores. Built by the trending
+  /// worker, returned unmodified by /api/trending.
+  payload Json
+
+  /// How many notes survived filtering, denormalised so health checks need not parse the blob.
+  kept Int
+
+  /// How many the sources offered before our rules ran. `offered - kept` is the filter's work.
+  offered Int
+
+  /// When the build ran. The API sends it as an age so a client can tell a live list from a
+  /// stuck worker, and so a stale snapshot is still served rather than nothing.
+  builtAt DateTime @default(now())
+
+  @@map("trending_snapshots")
+}

@@ -1,0 +1,12 @@
+{
+  // `lib` drops DOM on purpose. This package is imported by the Next.js app today and by
+  // React Native later, so a `document` or `window` reference has to be a compile error
+  // here rather than a crash on the first mobile import. Anything that genuinely needs the
+  // DOM ships as a string for the host to evaluate — see themeInitScript in src/index.ts.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": []
+  },
+  "include": ["src/**/*.ts"]
+}

@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "jsx": "react-jsx" },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  // `impl.tsx` imports `next/*`, which this package depends on by design it does not have.
+  // It is typechecked where it is resolvable: in apps/web.
+  "exclude": ["node_modules", "src/nav/impl.tsx"]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@nostrich/app",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "echo \"no lint\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nostrich/nostr": "workspace:*",
+    "@nostrich/types": "workspace:*",
+    "@nostrich/ui": "workspace:*",
+    "@tanstack/react-query": "5.62.11",
+    "nostr-social-graph": "1.0.36",
+    "qrcode-generator": "1.4.4"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@types/react": "19.0.7",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "typescript": "5.7.3",
+    "next": "15.5.21"
+  }
+}

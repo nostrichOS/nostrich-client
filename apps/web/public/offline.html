@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Offline — Nostrich</title>
+    <!--
+      Self-contained on purpose: this page is shown when the network is gone, so it can load no
+      font, no stylesheet and no script. Colours are the light theme's own roles, written as
+      literals for the same reason.
+    -->
+    <style>
+      :root { color-scheme: light dark; }
+      html, body { height: 100%; margin: 0; }
+      body {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 1.25rem; padding: 2rem; text-align: center; background: #ffffff; color: #171717;
+        font: 400 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      img { width: 96px; height: 96px; }
+      h1 { margin: 0; font-size: 1.375rem; font-weight: 700; }
+      p { margin: 0; max-width: 30ch; color: #525252; }
+      button {
+        margin-top: .5rem; padding: .625rem 1.5rem; border: 0; border-radius: 9999px;
+        background: #171717; color: #ffffff; font-size: .9375rem; font-weight: 700; cursor: pointer;
+      }
+      @media (prefers-color-scheme: dark) {
+        body { background: #0a0a0a; color: #fafafa; }
+        p { color: #cacaca; }
+        button { background: #fafafa; color: #0a0a0a; }
+      }
+    </style>
+  </head>
+  <body>
+    <img src="/icon-192.png" alt="" />
+    <h1>You are offline</h1>
+    <p>Nostrich needs a connection to reach your relays. Your drafts are safe on this device.</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+  </body>
+</html>
