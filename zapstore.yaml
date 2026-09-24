@@ -1,0 +1,21 @@
+# Who publishes Nostrich on Zapstore (zapstore.dev).
+#
+# Zapstore has no accounts: a release is a set of Nostr events signed by a key. This file is how
+# the store's relay confirms that the key below speaks for this project — it fetches this file from
+# the repository and checks the pubkey against the signer of the release events.
+#
+# The Android releases themselves are published from the app's own build, with the full listing
+# metadata, screenshots and the signed APK.
+repository: https://github.com/nostrichOS/nostrich-client
+pubkey: npub17fe5rak0reatm7y5xu3yvve0trl8njvjt4yflevhyxqpwv22mlfs3wnzuc
+
+name: Nostrich
+summary: Explore Nostr, Discover People
+website: https://nostrich.org
+
+tags:
+  - nostr
+  - social
+  - bitcoin
+  - lightning
+  - zaps
