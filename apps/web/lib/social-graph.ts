@@ -70,6 +70,14 @@ function notify(): void {
   for (const listener of listeners) listener()
 }
 
+/** Follow distance from `root` when its graph is already built, else undefined; never starts a crawl. */
+export function knownDistance(root: Hex, target: Hex): number | undefined {
+  const entry = entries.get(root)
+  if (entry === undefined || !entry.ready) return undefined
+  const d = entry.graph.getFollowDistance(target)
+  return d > MAX_DISTANCE ? Infinity : d
+}
+
 /** The graph for `root`, crawling it if this is the first time anyone asked. */
 function ensureGraph(root: Hex): GraphEntry {
   const existing = entries.get(root)

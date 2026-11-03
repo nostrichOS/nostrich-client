@@ -57,11 +57,14 @@ export function ChatScreen(): React.ReactNode {
 
   const [filter, setFilter] = useState<FilterId>('all')
   const [box, setBox] = useState<'inbox' | 'requests'>('inbox')
+  // The Hidden requests folder, opened from its row at the top of Requests.
+  const [hiddenOpen, setHiddenOpen] = useState(false)
+  const anyRequests = inbox.requests.length + inbox.hidden.length > 0
 
   /** THE LAST REQUEST TAKES THE TAB WITH IT, so it must not take the reader too. */
   useEffect(() => {
-    if (box === 'requests' && inbox.requests.length === 0) setBox('inbox')
-  }, [box, inbox.requests.length])
+    if (box === 'requests' && !anyRequests) setBox('inbox')
+  }, [box, anyRequests])
   const markRead = useMarkRead()
 
   /** Clear every conversation. */
@@ -114,7 +117,7 @@ export function ChatScreen(): React.ReactNode {
   }
 
   /** Requests are a separate list, never a hidden one. */
-  const source = box === 'requests' ? inbox.requests : inbox.inbox
+  const source = box === 'requests' ? (hiddenOpen ? inbox.hidden : inbox.requests) : inbox.inbox
   const shown = source.filter(conversation => {
     if (filter === 'unread' && conversation.unreadCount === 0) return false
     return true
@@ -213,7 +216,7 @@ export function ChatScreen(): React.ReactNode {
         </div>
 
         {/* Only when there is something to switch. */}
-        {inbox.requests.length === 0 ? null : (
+        {!anyRequests ? null : (
           <div className={`mt-3 ${TAB_STRIP}`}>
             <div role="tablist" aria-label="Inbox" className={TAB_STRIP_ROW}>
               {(
@@ -227,7 +230,10 @@ export function ChatScreen(): React.ReactNode {
                   role="tab"
                   type="button"
                   aria-selected={box === id}
-                  onClick={() => setBox(id)}
+                  onClick={() => {
+                    setBox(id)
+                    setHiddenOpen(false)
+                  }}
                   className={TAB_CELL}
                 >
                   <span className={TAB_LABEL}>
@@ -283,6 +289,24 @@ export function ChatScreen(): React.ReactNode {
         ) : null}
 
         <div className="min-h-0 flex-1 overflow-y-auto">
+          {box === 'requests' && (hiddenOpen || inbox.hidden.length > 0) ? (
+            // Opens the Hidden requests folder, and inside it is the way back.
+            <button
+              type="button"
+              data-hidden-requests
+              onClick={() => setHiddenOpen(open => !open)}
+              className="flex w-full cursor-pointer items-center gap-2 border-b border-border px-4 py-3 text-left text-sm font-bold text-text transition-colors hover:bg-hover sm:px-5"
+            >
+              {hiddenOpen ? <span aria-hidden="true" className="material-symbols-outlined text-[20px]!">chevron_left</span> : null}
+              <span className="min-w-0 flex-1 truncate">Hidden requests</span>
+              {hiddenOpen ? null : (
+                <>
+                  <span className="text-text-muted tabular-nums">{inbox.hidden.length.toLocaleString()}</span>
+                  <span aria-hidden="true" className="material-symbols-outlined text-[20px]! text-text-muted">chevron_right</span>
+                </>
+              )}
+            </button>
+          ) : null}
           {chat.loading && chat.conversations.length === 0 ? (
             /* Twelve rows, matching the timeline and News. */
             <ul aria-hidden="true" className="px-4 sm:px-5">
@@ -369,7 +393,7 @@ export function ChatScreen(): React.ReactNode {
             signer={signer}
             onBack={() => select(undefined)}
             // Asked of the CURRENT split rather than the tab, so a conversation accepted.
-            isRequest={inbox.requests.some(item => item.key === open.key)}
+            isRequest={[...inbox.requests, ...inbox.hidden].some(item => item.key === open.key)}
             // Accepting moves it to the inbox and deleting removes it, so either way the pane.
             onDecided={() => select(undefined)}
           />

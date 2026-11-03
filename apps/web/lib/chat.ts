@@ -27,6 +27,8 @@ import {
 import { firstLookAt } from './first-look'
 import { activeScope, readScoped, writeScoped } from './scope'
 import { getPool } from './pool'
+import { legacyWorthOpening } from './dm-strangers'
+import { readCachedProfile } from './profile-cache'
 
 /** Private messages (NIP-17), for the whole session. */
 
@@ -311,9 +313,38 @@ export function startChatSync(signer: Signer, pubkey: Hex): void {
   let closed = false
   let handle: { close: () => void } | undefined
 
+  let legacyRelays: RelayUrl[] = []
+  // A stranger's kind-4 waits here in small batches, and one with no profile is never decrypted.
+  let screening: NostrEvent[] = []
+  let screenTimer: ReturnType<typeof setTimeout> | undefined
+  const screen = (): void => {
+    screenTimer = undefined
+    const batch = screening
+    screening = []
+    void legacyWorthOpening(pubkey, batch, legacyRelays, sender => readCachedProfile(sender) !== undefined).then(
+      kept => {
+        if (closed) return
+        for (const event of kept) open(event, true)
+      },
+      () => {
+        if (closed) return
+        for (const event of batch) open(event, true)
+      },
+    )
+  }
+
   const enqueue = (event: NostrEvent, legacy: boolean): void => {
     if (seenWraps.has(event.id)) return
     seenWraps.add(event.id)
+    if (legacy && event.pubkey !== pubkey) {
+      screening.push(event)
+      if (screenTimer === undefined) screenTimer = setTimeout(screen, 400)
+      return
+    }
+    open(event, legacy)
+  }
+
+  const open = (event: NostrEvent, legacy: boolean): void => {
     queue.push(legacy ? { legacy: true, event } : { legacy: false, event })
     // Newest first: the conversations someone opens the app to read are the recent ones.
     queue.sort((a, b) => b.event.created_at - a.event.created_at)
@@ -345,7 +376,7 @@ export function startChatSync(signer: Signer, pubkey: Hex): void {
         { kinds: [LEGACY_KIND], '#p': [pubkey], limit: LEGACY_LIMIT },
         { kinds: [LEGACY_KIND], authors: [pubkey], limit: LEGACY_LIMIT },
       ],
-      relays: [...new Set([...relays, ...normalizeRelayUrls([...DEFAULT_RELAYS])])],
+      relays: (legacyRelays = [...new Set([...relays, ...normalizeRelayUrls([...DEFAULT_RELAYS])])]),
       onEvent: event => enqueue(event, true),
     })
 
